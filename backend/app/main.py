@@ -19,12 +19,18 @@ app = FastAPI(
 )
 
 # CORS Configuration
+origins = list(settings.CORS_ORIGINS)
+if "https://wandrerai.netlify.app" not in origins:
+    origins.append("https://wandrerai.netlify.app")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=origins,
+    allow_origin_regex=r"https://.*\.netlify\.app.*|https://.*\.onrender\.com.*|https://.*\.vercel\.app.*|http://localhost(:\d+)?|http://127\.0\.0\.1(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Custom Middlewares
@@ -34,8 +40,9 @@ app.add_middleware(RequestLoggerMiddleware)
 app.add_exception_handler(AppException, global_exception_handler)
 app.add_exception_handler(Exception, global_exception_handler)
 
-# Include API v1 Router
+# Include API v1 Router with and without prefix for backwards compatibility
 app.include_router(api_v1_router, prefix=settings.API_V1_PREFIX)
+app.include_router(api_v1_router)
 
 
 @app.get("/")
